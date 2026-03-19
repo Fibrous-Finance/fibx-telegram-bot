@@ -1,0 +1,45 @@
+{
+	"name": "fibx-telegram-bot",
+	"version": "0.1.0",
+	"description": "AI-powered Telegram bot for fibx DeFi on EVM chains",
+	"type": "module",
+	"main": "dist/index.js",
+	"scripts": {
+		"dev": "tsx watch --env-file=.env src/index.ts",
+		"build": "tsup",
+		"start": "node --env-file=.env dist/index.js",
+		"lint": "eslint src/",
+		"lint:fix": "eslint src/ --fix",
+		"format": "prettier --write \"src/**/*.ts\"",
+		"typecheck": "tsc --noEmit"
+	},
+	"engines": {
+		"node": ">=18"
+	},
+	"dependencies": {
+		"@ai-sdk/anthropic": "^3.0.58",
+		"@ai-sdk/google": "^3.0.43",
+		"@ai-sdk/mcp": "latest",
+		"@ai-sdk/openai": "^3.0.41",
+		"@modelcontextprotocol/sdk": "^1.27.1",
+		"ai": "^6.0.116",
+		"better-sqlite3": "^12.8.0",
+		"env-paths": "^3.0.0",
+		"telegraf": "^4.16.3",
+		"zod": "^3.25.76"
+	},
+	"devDependencies": {
+		"@eslint/js": "^10.0.1",
+		"@types/better-sqlite3": "^7.6.13",
+		"@types/node": "^22.19.15",
+		"eslint": "^10.0.3",
+		"eslint-config-prettier": "^10.1.8",
+		"globals": "^17.4.0",
+		"jiti": "^2.6.1",
+		"prettier": "^3.8.1",
+		"tsup": "^8.5.1",
+		"tsx": "^4.21.0",
+		"typescript": "^5.9.3",
+		"typescript-eslint": "^8.57.1"
+	}
+}
