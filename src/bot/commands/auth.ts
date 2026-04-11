@@ -91,14 +91,9 @@ export function createAuthHandlers(config: Config, mcpPool: McpProcessPool) {
 			);
 		} catch (error) {
 			logger.error("Auth OTP failed", { userId, error: String(error) });
-			await ctx.reply(
-				"Verification failed. Please try again.\n\nUse /auth to start over.",
-				{
-					...Markup.inlineKeyboard([
-						Markup.button.callback("Try Again", "auth:start"),
-					]),
-				}
-			);
+			await ctx.reply("Verification failed. Please try again.\n\nUse /auth to start over.", {
+				...Markup.inlineKeyboard([Markup.button.callback("Try Again", "auth:start")]),
+			});
 		}
 	}
 

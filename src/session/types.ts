@@ -8,7 +8,8 @@ export interface ModelOption {
 
 export const MODEL_OPTIONS: Record<Provider, ModelOption[]> = {
 	openai: [
-		{ id: "gpt-5-mini", label: "GPT-5 mini", description: "Fast & affordable" },
+		{ id: "gpt-5.4-nano", label: "GPT-5.4 Nano", description: "Fastest & cheapest" },
+		{ id: "gpt-5.4-mini", label: "GPT-5.4 Mini", description: "Fast & capable" },
 		{ id: "gpt-5.4", label: "GPT-5.4", description: "Most powerful" },
 	],
 	claude: [
@@ -17,14 +18,30 @@ export const MODEL_OPTIONS: Record<Provider, ModelOption[]> = {
 		{ id: "claude-opus-4-6", label: "Opus 4.6", description: "Most capable" },
 	],
 	gemini: [
-		{ id: "gemini-2.5-flash", label: "Gemini 2.5 Flash", description: "Fast & affordable" },
-		{ id: "gemini-2.5-pro", label: "Gemini 2.5 Pro", description: "Advanced reasoning" },
+		{
+			id: "gemini-3.1-flash-lite-preview",
+			label: "Gemini 3.1 Flash-Lite",
+			description: "Fastest & cheapest",
+		},
 		{
 			id: "gemini-3-flash-preview",
 			label: "Gemini 3 Flash",
-			description: "Next-gen (preview)",
+			description: "General purpose & fast",
+		},
+		{ id: "gemini-2.5-flash", label: "Gemini 2.5 Flash", description: "Balanced & robust" },
+		{ id: "gemini-2.5-pro", label: "Gemini 2.5 Pro", description: "Deep reasoning" },
+		{
+			id: "gemini-3.1-pro-preview",
+			label: "Gemini 3.1 Pro",
+			description: "State-of-the-art preview",
 		},
 	],
+};
+
+export const MODEL_DEFAULTS: Record<Provider, string> = {
+	openai: "gpt-5.4-mini",
+	claude: "claude-sonnet-4-6",
+	gemini: "gemini-2.5-flash",
 };
 
 export interface UserSession {

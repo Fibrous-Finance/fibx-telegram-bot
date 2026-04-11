@@ -81,9 +81,7 @@ export class SessionStore {
 				data = excluded.data,
 				updated_at = unixepoch()
 		`);
-		this.stmtDeleteAuthState = this.db.prepare(
-			"DELETE FROM auth_states WHERE user_id = ?"
-		);
+		this.stmtDeleteAuthState = this.db.prepare("DELETE FROM auth_states WHERE user_id = ?");
 
 		logger.info("Session store initialized", { dbPath });
 	}

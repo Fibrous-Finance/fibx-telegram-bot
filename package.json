@@ -1,6 +1,6 @@
 {
 	"name": "fibx-telegram-bot",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "AI-powered Telegram bot for fibx DeFi on EVM chains",
 	"type": "module",
 	"main": "dist/index.js",
@@ -17,16 +17,16 @@
 		"node": ">=18"
 	},
 	"dependencies": {
-		"@ai-sdk/anthropic": "^3.0.58",
-		"@ai-sdk/google": "^3.0.43",
-		"@ai-sdk/mcp": "latest",
-		"@ai-sdk/openai": "^3.0.41",
-		"@modelcontextprotocol/sdk": "^1.27.1",
-		"ai": "^6.0.116",
+		"@ai-sdk/anthropic": "^3.0.66",
+		"@ai-sdk/google": "^3.0.58",
+		"@ai-sdk/mcp": "^1.0.32",
+		"@ai-sdk/openai": "^3.0.50",
+		"@modelcontextprotocol/sdk": "^1.29.0",
+		"ai": "^6.0.146",
 		"better-sqlite3": "^12.8.0",
 		"env-paths": "^3.0.0",
 		"telegraf": "^4.16.3",
-		"zod": "^3.25.76"
+		"zod": "^4.3.6"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",

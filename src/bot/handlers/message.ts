@@ -60,8 +60,10 @@ export function createMessageHandler(config: Config, mcpPool: McpProcessPool) {
 
 				for (const chunk of chunks) {
 					try {
-						// @ts-expect-error — Telegraf types lag behind Bot API; field is valid
-						await ctx.reply(chunk, { parse_mode: "Markdown", disable_web_page_preview: true });
+						await ctx.reply(chunk, {
+							parse_mode: "Markdown",
+							link_preview_options: { is_disabled: true },
+						});
 					} catch {
 						// Fallback: send without Markdown if parsing fails
 						await ctx.reply(chunk);

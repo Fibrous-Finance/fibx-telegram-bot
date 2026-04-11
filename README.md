@@ -8,8 +8,18 @@ AI-powered Telegram bot for [FibX](https://github.com/ahmetenesdur/fibx) DeFi on
 - **Transfer** — Send native tokens and ERC-20s across supported chains
 - **Lend** — Supply, borrow, repay, withdraw on Aave V3 (Base)
 - **Markets** — Live Aave V3 market data with APY, supply, borrow, and LTV
-- **Portfolio** — Cross-chain balances with USD valuations
+- **Portfolio** — Cross-chain balances with USD valuations and DeFi positions
 - **Multi-chain** — Base, Citrea, HyperEVM, Monad
+- **Simulation** — `simulate=true` for fee estimation before execution
+- **Multi-Provider** — OpenAI (GPT-5.4), Claude (4.6), Gemini (3.1)
+
+## Supported Models
+
+| Provider | Models                                      | Default       |
+| -------- | ------------------------------------------- | ------------- |
+| OpenAI   | GPT-5.4 Nano, GPT-5.4 Mini, GPT-5.4        | GPT-5.4 Mini  |
+| Claude   | Haiku 4.5, Sonnet 4.6, Opus 4.6             | Sonnet 4.6    |
+| Gemini   | 3.1 Flash-Lite, 3 Flash, 2.5 Flash, 2.5 Pro, 3.1 Pro | 2.5 Flash |
 
 ## Quick Start
 
@@ -53,6 +63,38 @@ pnpm dev
 | `/deletekey` | Remove API key and session data           |
 | `/about`     | About FibX                                |
 | `/help`      | Show available commands                   |
+
+## Architecture
+
+```
+fibx-telegram-bot/
+├── src/
+│   ├── ai/
+│   │   ├── agent.ts          # AI SDK agent with MCP tool binding
+│   │   └── system-prompt.ts  # System prompt with 12 behavioral rules
+│   ├── bot/
+│   │   ├── index.ts          # Telegraf bot setup
+│   │   ├── commands/         # Command handlers
+│   │   └── middleware/       # Auth, rate-limit, logging
+│   ├── mcp/
+│   │   └── pool.ts           # Per-user MCP process pool with stale detection
+│   ├── session/
+│   │   ├── store.ts          # SQLite session storage (WAL mode)
+│   │   ├── types.ts          # Provider, model definitions, MODEL_DEFAULTS
+│   │   └── crypto.ts         # AES-256-GCM API key encryption
+│   └── lib/
+│       ├── logger.ts         # Structured logging
+│       └── markdown.ts       # Telegram markdown formatting
+```
+
+### MCP Process Pool
+
+Each Telegram user gets a dedicated MCP process. The pool manages lifecycle:
+
+- **Lazy initialization** — process spawns on first message
+- **Health checks** — 5-second timeout with stale client detection
+- **Max retries** — 2 reconnection attempts before failing
+- **Idle cleanup** — processes are killed after `MCP_IDLE_TIMEOUT_MS` (default: 5 min)
 
 ## Deployment
 

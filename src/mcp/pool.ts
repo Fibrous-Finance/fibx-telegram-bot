@@ -35,17 +35,25 @@ export class McpProcessPool {
 		this.cleanupTimer.unref();
 	}
 
-	async getClient(userId: string): Promise<MCPClient> {
+	async getClient(userId: string, _attempt = 0): Promise<MCPClient> {
 		const existing = this.pool.get(userId);
 
 		if (existing) {
-			// Validate the cached client is still alive
+			// Validate the cached client is still alive with a timeout
 			try {
-				await existing.client.tools();
+				const toolsPromise = existing.client.tools();
+				const timeoutPromise = new Promise<never>((_, reject) =>
+					setTimeout(() => reject(new Error("MCP health check timed out")), 5_000)
+				);
+				await Promise.race([toolsPromise, timeoutPromise]);
 			} catch {
 				logger.warn("Stale MCP client detected, reconnecting", { userId });
 				await this.kill(userId);
-				return this.getClient(userId);
+				// Guard against infinite reconnection
+				if (_attempt >= 2) {
+					throw new Error("Failed to establish stable MCP connection after retries.");
+				}
+				return this.getClient(userId, _attempt + 1);
 			}
 			existing.lastUsed = Date.now();
 			return existing.client;

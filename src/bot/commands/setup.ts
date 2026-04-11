@@ -28,7 +28,10 @@ export function createSetupHandlers(config: Config) {
 		const models = MODEL_OPTIONS[provider];
 
 		const buttons = models.map((m) => [
-			Markup.button.callback(`${m.label} — ${m.description}`, `setup:model:${provider}:${m.id}`),
+			Markup.button.callback(
+				`${m.label} — ${m.description}`,
+				`setup:model:${provider}:${m.id}`
+			),
 		]);
 
 		await ctx.editMessageText(`Provider: *${label}*\n\nNow choose a model:`, {
@@ -107,9 +110,7 @@ export function createSetupHandlers(config: Config) {
 				'Or just start chatting — try _"What can you do?"_',
 			{
 				parse_mode: "Markdown",
-				...Markup.inlineKeyboard([
-					Markup.button.callback("Log In to FibX", "auth"),
-				]),
+				...Markup.inlineKeyboard([Markup.button.callback("Log In to FibX", "auth")]),
 			}
 		);
 	}

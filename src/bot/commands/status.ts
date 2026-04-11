@@ -25,7 +25,9 @@ export function createStatusCommand(mcpPool: McpProcessPool) {
 		const modelLabel =
 			(session.provider && session.model
 				? MODEL_OPTIONS[session.provider]?.find((m) => m.id === session.model)?.label
-				: null) ?? session.model ?? "—";
+				: null) ??
+			session.model ??
+			"—";
 
 		await ctx.reply(
 			"*Status*\n\n" +
