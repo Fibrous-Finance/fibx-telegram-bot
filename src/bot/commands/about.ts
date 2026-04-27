@@ -12,6 +12,7 @@ export async function aboutCommand(ctx: BotContext): Promise<void> {
 			"• HyperEVM (HYPE)\n" +
 			"• Monad (MON)\n\n" +
 			"*Key capabilities:*\n" +
+			"• Price quotes without login\n" +
 			"• DEX-aggregated swaps via Fibrous\n" +
 			"• Cross-chain portfolio with USD values\n" +
 			"• Native & ERC-20 token transfers\n" +
