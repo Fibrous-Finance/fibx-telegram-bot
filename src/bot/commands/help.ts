@@ -12,6 +12,9 @@ export async function helpCommand(ctx: BotContext): Promise<void> {
 			"*Session*\n" +
 			"• /clear — Reset conversation history\n" +
 			"• /deletekey — Remove your stored API key\n\n" +
+			"*Alerts*\n" +
+			"• /alert ETH above 4000 — Notify when a price is reached\n" +
+			"• /alert list — Show active alerts\n\n" +
 			"*What I can do:*\n" +
 			'• Price quotes — _"How much USDC for 0.1 ETH?"_ (no login needed)\n' +
 			'• Token swaps — _"Swap 0.1 ETH to USDC on Base"_\n' +

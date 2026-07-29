@@ -62,8 +62,18 @@ pnpm dev
 | `/status`    | View current session and configuration    |
 | `/clear`     | Reset chat history                        |
 | `/deletekey` | Remove API key and session data           |
+| `/alert`     | One-shot price alerts (`/alert ETH above 4000`) |
 | `/about`     | About FibX                                |
 | `/help`      | Show available commands                   |
+
+### Price alerts
+
+`/alert <token> above|below <price> [chain]` creates a one-shot alert (max 10
+per user, chains: base, citrea, hyperevm, monad). Prices come from the public
+Fibrous token feed, polled every `ALERT_POLL_INTERVAL_MS` (default 60s), and
+each alert notifies exactly once before being removed. `/alert list` and
+`/alert delete <id>` manage existing alerts. Alerts work without an AI key or
+FibX login — only the chat is needed.
 
 ## Architecture
 

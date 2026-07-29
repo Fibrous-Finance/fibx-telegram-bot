@@ -15,6 +15,7 @@ import { modelCommand } from "./commands/model.js";
 import { createStatusCommand } from "./commands/status.js";
 import { clearCommand } from "./commands/clear.js";
 import { createDeleteKeyCommand } from "./commands/deletekey.js";
+import { alertCommand } from "./commands/alert.js";
 import { createMessageHandler } from "./handlers/message.js";
 import { createCallbackHandler } from "./handlers/callback.js";
 import { logger } from "../lib/logger.js";
@@ -43,6 +44,7 @@ export function createBot(
 	bot.command("status", createStatusCommand(mcpPool));
 	bot.command("clear", clearCommand);
 	bot.command("deletekey", createDeleteKeyCommand(mcpPool));
+	bot.command("alert", alertCommand);
 
 	// ── Callback queries (inline keyboard) ──
 	const callbackHandler = createCallbackHandler(config, mcpPool);

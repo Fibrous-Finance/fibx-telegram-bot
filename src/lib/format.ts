@@ -46,3 +46,15 @@ export function truncateAddress(address: string): string {
 	if (address.length <= 14) return address;
 	return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
+
+/**
+ * USD formatting for prices: two decimals for ordinary prices, more precision
+ * for sub-dollar tokens where two decimals would collapse to $0.00.
+ */
+export function formatUsd(value: number): string {
+	if (!Number.isFinite(value)) return "$?";
+	if (value !== 0 && Math.abs(value) < 1) {
+		return `$${value.toPrecision(4)}`;
+	}
+	return `$${value.toFixed(2)}`;
+}

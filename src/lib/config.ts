@@ -18,6 +18,7 @@ const configSchema = z.object({
 	webhookDomain: z.string().optional(),
 	webhookSecretPath: z.string().optional(),
 	port: z.number().int().positive().default(8080),
+	alertPollIntervalMs: z.number().int().min(10_000).default(60_000),
 });
 
 export type Config = z.infer<typeof configSchema>;
@@ -42,6 +43,9 @@ export function loadConfig(): Config {
 		webhookDomain: process.env.WEBHOOK_DOMAIN || undefined,
 		webhookSecretPath: process.env.WEBHOOK_SECRET_PATH || undefined,
 		port: process.env.PORT ? Number(process.env.PORT) : 8080,
+		alertPollIntervalMs: process.env.ALERT_POLL_INTERVAL_MS
+			? Number(process.env.ALERT_POLL_INTERVAL_MS)
+			: 60_000,
 	};
 
 	const result = configSchema.safeParse(raw);

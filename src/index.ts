@@ -7,6 +7,7 @@ import { setLogLevel, logger } from "./lib/logger.js";
 import { SessionStore } from "./session/store.js";
 import { McpProcessPool } from "./mcp/pool.js";
 import { createBot } from "./bot/bot.js";
+import { AlertMonitor } from "./alerts/monitor.js";
 
 async function main(): Promise<void> {
 	const config = loadConfig();
@@ -32,6 +33,10 @@ async function main(): Promise<void> {
 
 	// ── Bot ──
 	const bot = createBot(config, store, mcpPool);
+
+	// ── Price alert monitor ──
+	const alertMonitor = new AlertMonitor(bot, store, config.alertPollIntervalMs);
+	alertMonitor.start();
 
 	const writeHealth = (res: ServerResponse) => {
 		res.writeHead(200, { "Content-Type": "application/json" });
@@ -94,6 +99,7 @@ async function main(): Promise<void> {
 		isShuttingDown = true;
 
 		logger.info("Shutting down", { signal });
+		alertMonitor.stop();
 		bot.stop(signal);
 		await mcpPool.shutdown();
 		store.close();

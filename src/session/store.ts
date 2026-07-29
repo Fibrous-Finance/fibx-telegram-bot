@@ -11,6 +11,30 @@ import { logger } from "../lib/logger.js";
  */
 const AUTH_STATE_TTL_MS = 10 * 60 * 1000;
 
+export interface PriceAlert {
+	id: number;
+	userId: string;
+	chain: string;
+	tokenSymbol: string;
+	tokenAddress: string;
+	direction: "above" | "below";
+	targetPrice: number;
+	createdAt: number;
+}
+
+function rowToAlert(row: Record<string, unknown>): PriceAlert {
+	return {
+		id: Number(row.id),
+		userId: String(row.user_id),
+		chain: String(row.chain),
+		tokenSymbol: String(row.token_symbol),
+		tokenAddress: String(row.token_address),
+		direction: row.direction as "above" | "below",
+		targetPrice: Number(row.target_price),
+		createdAt: Number(row.created_at),
+	};
+}
+
 export class SessionStore {
 	private db: Database.Database;
 
@@ -25,6 +49,12 @@ export class SessionStore {
 	private stmtGetAuthState: Database.Statement;
 	private stmtSetAuthState: Database.Statement;
 	private stmtDeleteAuthState: Database.Statement;
+	private stmtAlertInsert: Database.Statement;
+	private stmtAlertsByUser: Database.Statement;
+	private stmtAlertCountByUser: Database.Statement;
+	private stmtAllAlerts: Database.Statement;
+	private stmtAlertDeleteOwned: Database.Statement;
+	private stmtAlertDeleteById: Database.Statement;
 
 	constructor(dbPath: string) {
 		this.db = new Database(dbPath);
@@ -49,6 +79,17 @@ export class SessionStore {
 				data          TEXT,
 				updated_at    INTEGER DEFAULT (unixepoch())
 			);
+			CREATE TABLE IF NOT EXISTS price_alerts (
+				id            INTEGER PRIMARY KEY AUTOINCREMENT,
+				user_id       TEXT NOT NULL,
+				chain         TEXT NOT NULL,
+				token_symbol  TEXT NOT NULL,
+				token_address TEXT NOT NULL,
+				direction     TEXT NOT NULL CHECK (direction IN ('above', 'below')),
+				target_price  REAL NOT NULL,
+				created_at    INTEGER DEFAULT (unixepoch())
+			);
+			CREATE INDEX IF NOT EXISTS idx_price_alerts_user ON price_alerts (user_id);
 		`);
 
 		this.stmtGet = this.db.prepare("SELECT * FROM sessions WHERE user_id = ?");
@@ -90,6 +131,22 @@ export class SessionStore {
 				updated_at = unixepoch()
 		`);
 		this.stmtDeleteAuthState = this.db.prepare("DELETE FROM auth_states WHERE user_id = ?");
+
+		this.stmtAlertInsert = this.db.prepare(`
+			INSERT INTO price_alerts (user_id, chain, token_symbol, token_address, direction, target_price)
+			VALUES (?, ?, ?, ?, ?, ?)
+		`);
+		this.stmtAlertsByUser = this.db.prepare(
+			"SELECT * FROM price_alerts WHERE user_id = ? ORDER BY id"
+		);
+		this.stmtAlertCountByUser = this.db.prepare(
+			"SELECT COUNT(*) AS n FROM price_alerts WHERE user_id = ?"
+		);
+		this.stmtAllAlerts = this.db.prepare("SELECT * FROM price_alerts ORDER BY id");
+		this.stmtAlertDeleteOwned = this.db.prepare(
+			"DELETE FROM price_alerts WHERE id = ? AND user_id = ?"
+		);
+		this.stmtAlertDeleteById = this.db.prepare("DELETE FROM price_alerts WHERE id = ?");
 
 		logger.info("Session store initialized", { dbPath });
 	}
@@ -176,6 +233,42 @@ export class SessionStore {
 
 	deleteAuthState(userId: string): void {
 		this.stmtDeleteAuthState.run(userId);
+	}
+
+	// ── Price alerts ──
+
+	addAlert(alert: Omit<PriceAlert, "id" | "createdAt">): number {
+		const result = this.stmtAlertInsert.run(
+			alert.userId,
+			alert.chain,
+			alert.tokenSymbol,
+			alert.tokenAddress,
+			alert.direction,
+			alert.targetPrice
+		);
+		return Number(result.lastInsertRowid);
+	}
+
+	alertCount(userId: string): number {
+		const row = this.stmtAlertCountByUser.get(userId) as { n: number };
+		return row.n;
+	}
+
+	alertsForUser(userId: string): PriceAlert[] {
+		return (this.stmtAlertsByUser.all(userId) as Record<string, unknown>[]).map(rowToAlert);
+	}
+
+	allAlerts(): PriceAlert[] {
+		return (this.stmtAllAlerts.all() as Record<string, unknown>[]).map(rowToAlert);
+	}
+
+	/** Deletes only if the alert belongs to the user. Returns true when removed. */
+	deleteAlertOwned(id: number, userId: string): boolean {
+		return this.stmtAlertDeleteOwned.run(id, userId).changes > 0;
+	}
+
+	deleteAlert(id: number): void {
+		this.stmtAlertDeleteById.run(id);
 	}
 
 	close(): void {
