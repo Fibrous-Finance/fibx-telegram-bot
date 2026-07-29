@@ -12,7 +12,7 @@ export async function startCommand(ctx: BotContext): Promise<void> {
 			"1. /setup — Choose your AI provider and model\n" +
 			"2. /auth — Log in to your FibX account\n" +
 			'3. Start chatting — try _"How much USDC for 0.1 ETH?"_\n\n' +
-			'You can ask for price quotes without logging in!\n' +
+			"You can ask for price quotes without logging in!\n" +
 			"Need help? Use /help to see everything I can do.",
 		{
 			parse_mode: "Markdown",
