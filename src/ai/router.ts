@@ -1,4 +1,4 @@
-import { generateText, stepCountIs } from "ai";
+import { generateText, stepCountIs, type ModelMessage } from "ai";
 import { type MCPClient } from "@ai-sdk/mcp";
 import { createModel } from "./providers.js";
 import { getSystemPrompt } from "./system-prompt.js";
@@ -10,26 +10,40 @@ export interface AiRouterInput {
 	apiKey: string;
 	modelName: string;
 	mcpClient: MCPClient;
-	history: { role: "user" | "assistant"; content: string }[];
+	history: ModelMessage[];
 	userMessage: string;
 	maxHistory: number;
 }
 
 export interface AiRouterResult {
 	reply: string;
-	updatedHistory: { role: "user" | "assistant"; content: string }[];
+	updatedHistory: ModelMessage[];
+}
+
+/**
+ * Trim history to roughly `maxHistory` messages without splitting a tool
+ * exchange. History now contains assistant tool-call messages and their tool
+ * results; a window that starts between the two produces a dangling
+ * tool-result, which provider APIs reject outright (a 400 on every following
+ * message until /clear). Advancing the cut to the next user turn keeps the
+ * window valid, since a user message can never be a tool continuation.
+ */
+export function trimHistory(history: ModelMessage[], maxHistory: number): ModelMessage[] {
+	if (history.length <= maxHistory) return history;
+
+	let start = history.length - maxHistory;
+	while (start < history.length && history[start].role !== "user") {
+		start++;
+	}
+	return history.slice(start);
 }
 
 export async function routeMessage(input: AiRouterInput): Promise<AiRouterResult> {
 	const { provider, apiKey, modelName, mcpClient, history, userMessage, maxHistory } = input;
 
-	// Trim history to maxHistory entries
-	const trimmed = history.slice(-maxHistory);
+	const trimmed = trimHistory(history, maxHistory);
 
-	const messages: { role: "user" | "assistant"; content: string }[] = [
-		...trimmed,
-		{ role: "user" as const, content: userMessage },
-	];
+	const messages: ModelMessage[] = [...trimmed, { role: "user" as const, content: userMessage }];
 
 	const label = PROVIDER_LABELS[provider] ?? provider;
 
@@ -62,10 +76,13 @@ export async function routeMessage(input: AiRouterInput): Promise<AiRouterResult
 
 		const reply = result.text || "I processed your request but have no text response.";
 
-		const updatedHistory: { role: "user" | "assistant"; content: string }[] = [
+		// response.messages carries the full assistant turn including tool calls
+		// and their results, so the model keeps tool context across messages
+		// (previously only the final text was stored and tool activity was lost).
+		const updatedHistory: ModelMessage[] = [
 			...trimmed,
 			{ role: "user", content: userMessage },
-			{ role: "assistant", content: reply },
+			...result.response.messages,
 		];
 
 		logger.debug("AI response", {

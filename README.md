@@ -70,22 +70,29 @@ pnpm dev
 ```
 fibx-telegram-bot/
 ├── src/
+│   ├── index.ts              # Entry point: config, store, pool, launch
 │   ├── ai/
-│   │   ├── agent.ts          # AI SDK agent with MCP tool binding
+│   │   ├── router.ts         # generateText loop with MCP tools + error taxonomy
+│   │   ├── providers.ts      # OpenAI / Anthropic / Google model factory
 │   │   └── system-prompt.ts  # System prompt with 13 behavioral rules
+│   ├── auth/
+│   │   └── fibx-auth.ts      # fibx-server OTP login + CLI session file
 │   ├── bot/
-│   │   ├── index.ts          # Telegraf bot setup
+│   │   ├── bot.ts            # Telegraf bot setup and text routing
 │   │   ├── commands/         # Command handlers
-│   │   └── middleware/       # Auth, rate-limit, logging
+│   │   ├── handlers/         # Message and callback-query handlers
+│   │   └── middleware/       # Session, rate-limit, per-user queue
 │   ├── mcp/
+│   │   ├── client.ts         # Stdio MCP client with per-user virtual HOME
 │   │   └── pool.ts           # Per-user MCP process pool with stale detection
 │   ├── session/
 │   │   ├── store.ts          # SQLite session storage (WAL mode)
 │   │   ├── types.ts          # Provider, model definitions, MODEL_DEFAULTS
 │   │   └── crypto.ts         # AES-256-GCM API key encryption
 │   └── lib/
+│       ├── config.ts         # Zod-validated environment config
 │       ├── logger.ts         # Structured logging
-│       └── markdown.ts       # Telegram markdown formatting
+│       └── format.ts         # Telegram markdown sanitizing and chunking
 ```
 
 ### MCP Process Pool

@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { chmod, mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { logger } from "../lib/logger.js";
 
@@ -73,7 +73,7 @@ function getFibxConfigDir(userHome: string): string {
  */
 export async function writeSessionFile(userHome: string, auth: FibxAuthResult): Promise<void> {
 	const configDir = getFibxConfigDir(userHome);
-	await mkdir(configDir, { recursive: true });
+	await mkdir(configDir, { recursive: true, mode: 0o700 });
 
 	const session = {
 		type: "privy" as const,
@@ -84,7 +84,17 @@ export async function writeSessionFile(userHome: string, auth: FibxAuthResult): 
 		createdAt: new Date().toISOString(),
 	};
 
-	await writeFile(join(configDir, "session.json"), JSON.stringify(session, null, 2), "utf-8");
+	// The file holds a bearer JWT for the user's wallet and has to stay readable
+	// by the CLI subprocess, so it cannot be encrypted the way API keys are.
+	// Restrict it to the owner instead of leaving it world-readable.
+	const sessionPath = join(configDir, "session.json");
+	await writeFile(sessionPath, JSON.stringify(session, null, 2), {
+		encoding: "utf-8",
+		mode: 0o600,
+	});
+	// `mode` above only applies when the file is created; on re-auth the file
+	// already exists and keeps its old permissions, so set them explicitly.
+	await chmod(sessionPath, 0o600);
 	logger.info("fibx session file written", {
 		userHome,
 		address: auth.walletAddress,

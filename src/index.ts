@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { mkdirSync } from "node:fs";
-import { createServer } from "node:http";
+import { createServer, type ServerResponse } from "node:http";
+import { createHash } from "node:crypto";
 import { loadConfig } from "./lib/config.js";
 import { setLogLevel, logger } from "./lib/logger.js";
 import { SessionStore } from "./session/store.js";
@@ -32,32 +33,54 @@ async function main(): Promise<void> {
 	// ── Bot ──
 	const bot = createBot(config, store, mcpPool);
 
+	const writeHealth = (res: ServerResponse) => {
+		res.writeHead(200, { "Content-Type": "application/json" });
+		res.end(JSON.stringify({ status: "ok", mcpProcesses: mcpPool.size }));
+	};
+
 	// ── Launch ──
+	let health: ReturnType<typeof createServer> | null = null;
+
 	if (config.webhookDomain) {
-		const webhookPath = config.webhookSecretPath ?? `/webhook/${config.telegramBotToken}`;
+		// Never put the bot token in the URL — it would end up in reverse proxy,
+		// CDN and access logs. secretPathComponent() is a sha3-256 digest of the
+		// token: stable across restarts, and it gives nothing away.
+		const webhookPath = config.webhookSecretPath ?? `/webhook/${bot.secretPathComponent()}`;
+
+		// Telegram echoes this back in X-Telegram-Bot-Api-Secret-Token, so anyone
+		// who discovers the URL still cannot inject forged updates.
+		const secretToken = createHash("sha256")
+			.update(`${config.telegramBotToken}:${config.encryptionSecret}`)
+			.digest("hex");
+
 		await bot.launch({
 			webhook: {
 				domain: config.webhookDomain,
 				port: config.port,
 				hookPath: webhookPath,
+				secretToken,
+				// Telegraf only serves the hook path; everything else lands here.
+				// Without this, container health probes get no answer in webhook mode.
+				cb: (req, res) => {
+					if (req.url === "/health") {
+						writeHealth(res);
+						return;
+					}
+					res.writeHead(404, { "Content-Type": "application/json" });
+					res.end(JSON.stringify({ error: "Not found" }));
+				},
 			},
 		});
 		logger.info("Bot started (webhook mode)", {
 			domain: config.webhookDomain,
 			port: config.port,
+			path: webhookPath,
 		});
 	} else {
 		await bot.launch();
 		logger.info("Bot started (polling mode)");
-	}
 
-	// ── Health check server (only in polling mode — webhook uses its own HTTP server) ──
-	let health: ReturnType<typeof createServer> | null = null;
-	if (!config.webhookDomain) {
-		health = createServer((_req, res) => {
-			res.writeHead(200, { "Content-Type": "application/json" });
-			res.end(JSON.stringify({ status: "ok", mcpProcesses: mcpPool.size }));
-		});
+		health = createServer((_req, res) => writeHealth(res));
 		health.listen(config.port, () => {
 			logger.info("Health check server listening", { port: config.port });
 		});

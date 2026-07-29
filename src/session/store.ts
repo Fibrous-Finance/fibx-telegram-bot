@@ -1,7 +1,15 @@
 import Database from "better-sqlite3";
+import type { ModelMessage } from "ai";
 import { type Provider, type UserSession } from "./types.js";
 import { decrypt } from "./crypto.js";
 import { logger } from "../lib/logger.js";
+
+/**
+ * How long a half-finished auth flow stays armed. Long enough to receive and
+ * type an emailed OTP, short enough that a forgotten flow does not capture an
+ * unrelated message later on.
+ */
+const AUTH_STATE_TTL_MS = 10 * 60 * 1000;
 
 export class SessionStore {
 	private db: Database.Database;
@@ -70,7 +78,7 @@ export class SessionStore {
 		this.stmtDelete = this.db.prepare("DELETE FROM sessions WHERE user_id = ?");
 
 		this.stmtGetAuthState = this.db.prepare(
-			"SELECT step, email, data FROM auth_states WHERE user_id = ?"
+			"SELECT step, email, data, updated_at FROM auth_states WHERE user_id = ?"
 		);
 		this.stmtSetAuthState = this.db.prepare(`
 			INSERT INTO auth_states (user_id, step, email, data)
@@ -129,10 +137,7 @@ export class SessionStore {
 		return decrypt(session.encryptedApiKey, secret);
 	}
 
-	updateHistory(
-		userId: string,
-		history: { role: "user" | "assistant"; content: string }[]
-	): void {
+	updateHistory(userId: string, history: ModelMessage[]): void {
 		this.stmtUpdateHistory.run(JSON.stringify(history), userId);
 	}
 
@@ -143,11 +148,26 @@ export class SessionStore {
 
 	// ── Auth state management ──
 
+	/**
+	 * Returns the pending auth step, or null if there is none.
+	 *
+	 * Auth states expire: while one is set, the router treats the user's next
+	 * plain message as an email / OTP / API key. An abandoned flow left that
+	 * trap armed indefinitely, so an unrelated message sent hours later was
+	 * swallowed by the auth handler instead of reaching the AI.
+	 */
 	getAuthState(userId: string): { step: string; email?: string; data?: string } | null {
 		const row = this.stmtGetAuthState.get(userId) as Record<string, unknown> | undefined;
-		return row
-			? { step: row.step as string, email: row.email as string, data: row.data as string }
-			: null;
+		if (!row) return null;
+
+		const updatedAt = Number(row.updated_at ?? 0);
+		const ageMs = Date.now() - updatedAt * 1000;
+		if (ageMs > AUTH_STATE_TTL_MS) {
+			this.deleteAuthState(userId);
+			return null;
+		}
+
+		return { step: row.step as string, email: row.email as string, data: row.data as string };
 	}
 
 	setAuthState(userId: string, step: string, email?: string, data?: string): void {

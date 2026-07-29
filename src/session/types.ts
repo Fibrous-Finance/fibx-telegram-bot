@@ -1,3 +1,5 @@
+import type { ModelMessage } from "ai";
+
 export type Provider = "openai" | "claude" | "gemini";
 
 export interface ModelOption {
@@ -49,7 +51,12 @@ export interface UserSession {
 	model: string | null;
 	encryptedApiKey: string | null;
 	fibxAddr: string | null;
-	history: { role: "user" | "assistant"; content: string }[];
+	/**
+	 * Full model messages, including assistant tool calls and tool results.
+	 * Rows written before this change hold plain {role, content} pairs, which
+	 * are themselves valid ModelMessages — no migration needed.
+	 */
+	history: ModelMessage[];
 }
 
 export const PROVIDER_LABELS: Record<Provider, string> = {
