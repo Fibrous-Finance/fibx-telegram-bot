@@ -11,7 +11,7 @@ export async function helpCommand(ctx: BotContext): Promise<void> {
 			"• /status — View your current session (provider, model, account)\n\n" +
 			"*Session*\n" +
 			"• /clear — Reset conversation history\n" +
-			"• /deletekey — Remove your stored API key\n\n" +
+			"• /deletekey — Remove credentials and session data (alerts stay active)\n\n" +
 			"*Alerts*\n" +
 			"• /alert ETH above 4000 — Notify when a price is reached\n" +
 			"• /alert list — Show active alerts\n\n" +

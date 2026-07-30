@@ -6,8 +6,10 @@ import { logger } from "../lib/logger.js";
 /**
  * Create an MCP client connected to the fibx CLI via stdio transport.
  *
- * Each user gets an isolated HOME directory so that session files,
- * config, and cache do not leak between Telegram users.
+ * Each user gets a distinct virtual HOME and XDG paths so the application
+ * routes session files, config, and caches to separate directories. These
+ * child processes still run under the bot's OS account; this is not an OS
+ * user or container security boundary.
  */
 export async function createFibxMcpClient(
 	command: string,

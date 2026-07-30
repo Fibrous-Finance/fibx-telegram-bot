@@ -56,18 +56,18 @@ pnpm dev
 
 ## Commands
 
-| Command      | Description                                     |
-| ------------ | ----------------------------------------------- |
-| `/start`     | Welcome message                                 |
-| `/setup`     | Configure AI provider, model, and API key       |
-| `/auth`      | Log in to FibX account via email OTP            |
-| `/model`     | Switch AI model within current provider         |
-| `/status`    | View current session and configuration          |
-| `/clear`     | Reset chat history                              |
-| `/deletekey` | Remove API key and session data                 |
-| `/alert`     | One-shot price alerts (`/alert ETH above 4000`) |
-| `/about`     | About FibX                                      |
-| `/help`      | Show available commands                         |
+| Command      | Description                                      |
+| ------------ | ------------------------------------------------ |
+| `/start`     | Welcome message                                  |
+| `/setup`     | Configure AI provider, model, and API key        |
+| `/auth`      | Log in to FibX account via email OTP             |
+| `/model`     | Switch AI model within current provider          |
+| `/status`    | View current session and configuration           |
+| `/clear`     | Reset chat history                               |
+| `/deletekey` | Remove credentials and session data; keep alerts |
+| `/alert`     | One-shot price alerts (`/alert ETH above 4000`)  |
+| `/about`     | About FibX                                       |
+| `/help`      | Show available commands                          |
 
 ### Price alerts
 
@@ -110,7 +110,8 @@ fibx-telegram-bot/
 
 ### MCP Process Pool
 
-Each Telegram user gets a dedicated MCP process. The pool manages lifecycle:
+Each Telegram user gets a dedicated MCP child process and bot-managed virtual
+HOME/config path. The pool manages lifecycle:
 
 - **Lazy initialization** — process spawns on first message
 - **Health checks** — 5-second timeout with stale client detection
@@ -121,10 +122,17 @@ Each Telegram user gets a dedicated MCP process. The pool manages lifecycle:
 
 - **Bring your own key.** There is no shared LLM key. Each user's API key is
   encrypted at rest with AES-256-GCM, and the message containing it is deleted
-  from the chat immediately after it is stored. `/deletekey` erases everything.
-- **Isolated per user.** Every user's MCP process runs under its own virtual
-  HOME with all XDG paths redirected, so sessions, config, and caches can never
-  leak between users. The FibX session file is written `0600`.
+  from the chat immediately after it is stored. `/deletekey` removes the saved
+  AI-provider configuration and encrypted API key, FibX login/session files,
+  pending setup/login state, conversation history, and that user's bot-managed
+  FibX config/cache directory. Price alerts stay active until they fire or are
+  removed separately with `/alert delete <id>`.
+- **Separated paths and processes per user.** Every user gets a dedicated MCP
+  child process with a distinct virtual HOME and redirected XDG paths. These are
+  application-level boundaries: the bot and its MCP children run under the same
+  OS account, not separate OS users or containers. The FibX session file is
+  written `0600`, which blocks access by other unprivileged OS accounts but not
+  the bot account itself (or a privileged host administrator).
 - **Limits live below the model.** Wallet spending caps are enforced by the
   Privy signing policy configured in
   [fibx-server](https://github.com/Fibrous-Finance/fibx-server#wallet-policy-privy-signing-layer),

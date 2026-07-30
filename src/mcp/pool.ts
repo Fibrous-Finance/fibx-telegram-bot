@@ -1,6 +1,6 @@
 import { type MCPClient } from "@ai-sdk/mcp";
-import { join } from "node:path";
-import { mkdir } from "node:fs/promises";
+import { join, resolve, sep } from "node:path";
+import { mkdir, rm } from "node:fs/promises";
 import { createFibxMcpClient } from "./client.js";
 import { logger } from "../lib/logger.js";
 
@@ -59,7 +59,7 @@ export class McpProcessPool {
 			return existing.client;
 		}
 
-		const userHome = join(this.baseDir, userId);
+		const userHome = this.getUserHome(userId);
 		await mkdir(userHome, { recursive: true });
 
 		try {
@@ -80,9 +80,23 @@ export class McpProcessPool {
 		}
 	}
 
-	/** Get the user's HOME directory for session file writing */
+	/**
+	 * Get the bot-managed HOME directory for a Telegram user.
+	 *
+	 * Telegram user IDs are decimal integers. Rejecting every other shape keeps
+	 * callers from turning a user-controlled identifier into a path traversal.
+	 */
 	getUserHome(userId: string): string {
-		return join(this.baseDir, userId);
+		if (!/^[1-9]\d*$/.test(userId)) {
+			throw new Error("Invalid Telegram user ID");
+		}
+
+		const baseDir = resolve(this.baseDir);
+		const userHome = resolve(baseDir, userId);
+		if (!userHome.startsWith(`${baseDir}${sep}`)) {
+			throw new Error("User HOME must stay inside the managed data directory");
+		}
+		return userHome;
 	}
 
 	/** Kill and recreate a user's MCP process (e.g. after auth) */
@@ -102,6 +116,19 @@ export class McpProcessPool {
 		}
 		this.pool.delete(userId);
 		logger.debug("MCP process killed", { userId });
+	}
+
+	/**
+	 * Stop a user's MCP process, then remove only that user's bot-managed HOME.
+	 *
+	 * This is intentionally separate from idle process cleanup: an idle process
+	 * should retain its login session, while `/deletekey` must remove it.
+	 */
+	async deleteUserHome(userId: string): Promise<void> {
+		const userHome = this.getUserHome(userId);
+		await this.kill(userId);
+		await rm(userHome, { recursive: true, force: true });
+		logger.info("User MCP HOME deleted", { userId });
 	}
 
 	get size(): number {

@@ -68,8 +68,9 @@ function getFibxConfigDir(userHome: string): string {
  * Write a session file that the fibx CLI MCP process can read.
  *
  * The fibx CLI uses `env-paths('fibx').config` which resolves to
- * a platform-specific path. Since each user has an isolated HOME,
- * we mirror env-paths behavior under the user's virtual HOME.
+ * a platform-specific path. For application-level separation, each user's
+ * MCP child receives a distinct virtual HOME/config path, so we mirror
+ * env-paths behavior there. All children still share the bot's OS account.
  */
 export async function writeSessionFile(userHome: string, auth: FibxAuthResult): Promise<void> {
 	const configDir = getFibxConfigDir(userHome);
@@ -86,7 +87,9 @@ export async function writeSessionFile(userHome: string, auth: FibxAuthResult): 
 
 	// The file holds a bearer JWT for the user's wallet and has to stay readable
 	// by the CLI subprocess, so it cannot be encrypted the way API keys are.
-	// Restrict it to the owner instead of leaving it world-readable.
+	// Restrict it to the owning OS account instead of leaving it world-readable.
+	// Other bot children run under that same account, so correct per-user path
+	// selection remains part of the application trust boundary.
 	const sessionPath = join(configDir, "session.json");
 	await writeFile(sessionPath, JSON.stringify(session, null, 2), {
 		encoding: "utf-8",
