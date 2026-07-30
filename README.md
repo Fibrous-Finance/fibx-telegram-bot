@@ -1,6 +1,6 @@
 # FibX Telegram Bot
 
-AI-powered Telegram bot for [FibX](https://github.com/ahmetenesdur/fibx) DeFi on EVM chains. Users bring their own AI model — OpenAI, Claude, or Gemini — and their own API key. No shared keys, no centralized billing.
+AI-powered Telegram bot for [FibX](https://github.com/Fibrous-Finance/fibx) DeFi on EVM chains. Users bring their own AI model — OpenAI, Claude, or Gemini — and their own API key. No shared keys, no centralized billing.
 
 ## Features
 
@@ -26,7 +26,7 @@ AI-powered Telegram bot for [FibX](https://github.com/ahmetenesdur/fibx) DeFi on
 ## Quick Start
 
 ```bash
-git clone https://github.com/ahmetenesdur/fibx-telegram-bot.git
+git clone https://github.com/Fibrous-Finance/fibx-telegram-bot.git
 cd fibx-telegram-bot
 pnpm install
 
@@ -127,7 +127,7 @@ Each Telegram user gets a dedicated MCP process. The pool manages lifecycle:
   leak between users. The FibX session file is written `0600`.
 - **Limits live below the model.** Wallet spending caps are enforced by the
   Privy signing policy configured in
-  [fibx-server](https://github.com/ahmetenesdur/fibx-server#wallet-policy-privy-signing-layer),
+  [fibx-server](https://github.com/Fibrous-Finance/fibx-server#wallet-policy-privy-signing-layer),
   not by the system prompt — a jailbroken prompt cannot raise them.
 - **Confirmation before value moves.** The agent must ask for an explicit
   confirmation before any transactional tool call.
