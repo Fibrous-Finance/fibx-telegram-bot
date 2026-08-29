@@ -8,7 +8,6 @@ export async function aboutCommand(ctx: BotContext): Promise<void> {
 			"powered by Fibrous.\n\n" +
 			"*Supported chains:*\n" +
 			"• Base (ETH) — with Aave V3\n" +
-			"• Citrea (cBTC)\n" +
 			"• HyperEVM (HYPE)\n" +
 			"• Monad (MON)\n\n" +
 			"*Key capabilities:*\n" +

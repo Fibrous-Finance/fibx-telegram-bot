@@ -3,7 +3,6 @@ export function getSystemPrompt(): string {
 
 SUPPORTED CHAINS:
 - Base (ETH) — supports Aave V3
-- Citrea (cBTC)
 - HyperEVM (HYPE)
 - Monad (MON)
 

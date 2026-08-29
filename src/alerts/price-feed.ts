@@ -2,7 +2,12 @@ import { logger } from "../lib/logger.js";
 
 const FIBROUS_GRAPH_URL = "https://graph.fibrous.finance";
 
-export const SUPPORTED_CHAINS = ["base", "citrea", "hyperevm", "monad"] as const;
+/**
+ * Chains alerts can watch. Citrea was withdrawn on 2026-08-29: Fibrous delisted
+ * it upstream on 2026-08-10 and took the graph service down with it, so the
+ * token list below answers 404 there and no alert could ever resolve a price.
+ */
+export const SUPPORTED_CHAINS = ["base", "hyperevm", "monad"] as const;
 export type ChainName = (typeof SUPPORTED_CHAINS)[number];
 
 export function isSupportedChain(value: string): value is ChainName {

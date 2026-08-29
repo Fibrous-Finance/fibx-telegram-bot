@@ -11,7 +11,7 @@ AI-powered Telegram bot for [FibX](https://github.com/Fibrous-Finance/fibx) DeFi
 - **Markets** — Live Aave V3 market data with APY, supply, borrow, and LTV
 - **Portfolio** — Cross-chain balances with USD valuations and DeFi positions
 - **Price alerts** — `/alert ETH above 4000`, no login or AI key required
-- **Multi-chain** — Base, Citrea, HyperEVM, Monad
+- **Multi-chain** — Base, HyperEVM, Monad
 - **Simulation** — `simulate=true` for fee estimation before execution
 - **Multi-Provider** — OpenAI (GPT-5.4), Claude (4.6), Gemini (3.1)
 
@@ -72,7 +72,7 @@ pnpm dev
 ### Price alerts
 
 `/alert <token> above|below <price> [chain]` creates a one-shot alert (max 10
-per user, chains: base, citrea, hyperevm, monad). Prices come from the public
+per user, chains: base, hyperevm, monad). Prices come from the public
 Fibrous token feed, polled every `ALERT_POLL_INTERVAL_MS` (default 60s), and
 each alert notifies exactly once before being removed. `/alert list` and
 `/alert delete <id>` manage existing alerts. Alerts work without an AI key or
