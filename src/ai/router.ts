@@ -48,7 +48,10 @@ export async function routeMessage(input: AiRouterInput): Promise<AiRouterResult
 	const label = PROVIDER_LABELS[provider] ?? provider;
 
 	try {
-		const tools = await mcpClient.tools();
+		// Telegram renders no MCP Apps UI. open_fibx exists for hosts that do;
+		// here it would only hand the model a snapshot the headless tools
+		// already give, so it stays off the menu.
+		const { open_fibx: _openFibx, ...tools } = await mcpClient.tools();
 		const model = createModel(provider, apiKey, modelName);
 
 		const result = await generateText({
